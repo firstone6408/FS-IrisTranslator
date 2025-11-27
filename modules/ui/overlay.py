@@ -50,6 +50,10 @@ class Overlay(QtWidgets.QWidget):
         self.text_pos = None
         self.worker = None
         self.last_bbox = None
+        
+        # เก็บผลลัพธ์ก่อนหน้า เพื่อใช้เช็กว่าซ้ำไหม
+        self.last_raw_text = None
+        self.last_translated_text = None
 
         # Timer สำหรับ Auto OCR
         self.timer = QtCore.QTimer()
@@ -212,13 +216,33 @@ class Overlay(QtWidgets.QWidget):
         self.worker.finished_signal.connect(self.on_text_ready)
         self.worker.start()
 
+    # ======================================================
+    # เมื่อ OCRWorker ส่งข้อมูลกลับมาที่ overlay
+    # ======================================================
     def on_text_ready(self, data):
         """
-        เรียกเมื่อ OCR เสร็จ
+        ถูกเรียกเมื่อ OCRWorker เสร็จ
+        เช็กก่อนว่าข้อความเหมือนเดิมหรือไม่
+        ถ้าเหมือนเดิม → ไม่ต้อง update และไม่ต้อง log
         """
-        self.text = data["th"]
+
+        raw = data["raw"]
+        th = data["th"]
+
+        # ======= ป้องกัน log ซ้ำ =======
+        if raw == self.last_raw_text and th == self.last_translated_text:
+            return  # ไม่ส่ง signal → Panel ไม่ log
+
+        # ======= บันทึก state ล่าสุด =======
+        self.last_raw_text = raw
+        self.last_translated_text = th
+
+        # ======= อัปเดตข้อความแปลบน overlay =======
+        self.text = th
         self.worker = None
         self.update()
+
+        # ======= ส่งสัญญาณไป Panel เพื่อสร้าง log =======
         self.finished_signal.emit(data)
 
     def closeEvent(self, e):

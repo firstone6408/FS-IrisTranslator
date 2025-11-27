@@ -1,7 +1,7 @@
 # ==========================================================
 # ocr_worker.py
-# Thread สำหรับทำ OCR แบบ background
-# แยกออกจาก UI เพื่อไม่ให้โปรแกรมค้างขณะประมวลผล
+# Thread สำหรับทำ OCR แบบ background + Translation Cache
+# ถ้าข้อความเหมือนเดิม → ไม่ต้องแปลซ้ำ
 # ==========================================================
 
 from PyQt6 import QtCore
@@ -14,37 +14,40 @@ from modules.core.translator import translate_text
 
 class OCRWorker(QtCore.QThread):
     """
-    ทำ OCR ใน background thread
-    เมื่อ OCR เสร็จจะส่งสัญญาณ finished_signal พร้อมผลลัพธ์กลับไปที่ Overlay
+    ทำ OCR ใน background thread และใช้ cache เพื่อเพิ่มความเร็ว
+    finished_signal จะคืน dict ข้อมูล OCR + แปล
     """
     finished_signal = QtCore.pyqtSignal(object)
 
+    # ===== Static Cache (ใช้ร่วมกันทุก overlay) =====
+    last_raw = None
+    last_translated = None
+
     def __init__(self, bbox):
-        """
-        bbox: (x, y, w, h) พื้นที่สกรีนที่ต้องการจับภาพเพื่อนำไป OCR
-        """
         super().__init__()
         self.bbox = bbox
 
     def run(self):
         """
-        ทำงานเมื่อ thread เริ่มทำงาน
+        ทำงานเมื่อ thread เริ่มทำงาน:
         1. จับภาพจากหน้าจอ
         2. OCR
-        3. แปลภาษา
-        4. ส่งผลกลับไปให้ Overlay
+        3. ใช้ cache ถ้าข้อความเดิม
+        4. แปลภาษา (ถ้าจำเป็น)
+        5. ส่งผลกลับไปให้ Overlay
         """
         x, y, w, h = self.bbox
 
-        # ดึงภาพหน้าจอตำแหน่งที่เลือก
+        # ===== 1) Capture screen =====
         with mss.mss() as sct:
             cap = sct.grab({"top": y, "left": x, "width": w, "height": h})
             img = Image.frombytes("RGB", cap.size, cap.rgb)
 
+        # ===== 2) OCR =====
         raw = pytesseract.image_to_string(img, lang="eng").strip()
 
+        # ===== ถ้าไม่เจอข้อความ =====
         if raw == "":
-            # ไม่เจอข้อความ
             self.finished_signal.emit({
                 "raw": "(empty)",
                 "th": "(ไม่พบข้อความ)",
@@ -53,10 +56,18 @@ class OCRWorker(QtCore.QThread):
             })
             return
 
-        # แปลข้อความ
-        th = translate_text(raw)
+        # ===== 3) เช็กว่าข้อความซ้ำไหม → ใช้ cache =====
+        if OCRWorker.last_raw == raw:
+            th = OCRWorker.last_translated
+        else:
+            # ===== 4) แปลใหม่ถ้าข้อความเปลี่ยน =====
+            th = translate_text(raw)
 
-        # ส่งกลับให้ Overlay
+            # อัปเดต cache
+            OCRWorker.last_raw = raw
+            OCRWorker.last_translated = th
+
+        # ===== 5) ส่งผลลัพธ์กลับ =====
         self.finished_signal.emit({
             "raw": raw,
             "th": th,
