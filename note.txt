@@ -1,0 +1,11 @@
+# python 3.10
+
+pip install PyQt6
+pip install mss
+pip install numpy
+pip install pillow
+pip install googletrans==4.0.0-rc1
+pip install pytesseract (ต้องติดตั้ง sudo apt install tesseract-ocr)
+
+sudo apt update
+sudo apt install libxcb-cursor0
