@@ -122,13 +122,13 @@ class Overlay(QtWidgets.QWidget):
         elif y > sh - 5:
             y = self.persistent_rect.top() - 5
 
-        # ซ้าย → ไปขวา
-        if x - 10 < 0:
-            x = self.persistent_rect.right() + 10
+        # # ซ้าย → ไปขวา
+        # if x - 10 < 0:
+        #     x = self.persistent_rect.right() + 10
 
-        # ขวา → ไปซ้าย
-        elif x + bubble_w > sw:
-            x = self.persistent_rect.left() - bubble_w - 5
+        # # ขวา → ไปซ้าย
+        # elif x + bubble_w > sw:
+        #     x = self.persistent_rect.left() - bubble_w - 5
 
         bg = QtCore.QRect(x - 10, y - bubble_h + 5, bubble_w, bubble_h)
         qp.fillRect(bg, QtGui.QColor(30, 30, 30, 180))
