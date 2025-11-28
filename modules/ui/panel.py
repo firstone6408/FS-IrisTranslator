@@ -69,6 +69,40 @@ class Panel(QtWidgets.QWidget):
         font_group.setLayout(font_layout)
 
         layout.addWidget(font_group)
+        
+        # =======================
+        # Language Settings
+        # =======================
+        LANGS = {
+            "English": "en",
+            "Thai": "th",
+            "Japanese": "ja",
+        }
+
+        lang_group = QtWidgets.QGroupBox("Language Settings")
+        lang_group.setStyleSheet("QGroupBox { font-weight: bold; }")
+
+        lang_layout = QtWidgets.QHBoxLayout()
+
+        self.combo_src = QtWidgets.QComboBox()
+        self.combo_dst = QtWidgets.QComboBox()
+
+        for name, code in LANGS.items():
+            self.combo_src.addItem(name, code)
+            self.combo_dst.addItem(name, code)
+
+        # default
+        self.combo_src.setCurrentText("English")
+        self.combo_dst.setCurrentText("Thai")
+
+        lang_layout.addWidget(QtWidgets.QLabel("From:"))
+        lang_layout.addWidget(self.combo_src)
+
+        lang_layout.addWidget(QtWidgets.QLabel("To:"))
+        lang_layout.addWidget(self.combo_dst)
+
+        lang_group.setLayout(lang_layout)
+        layout.addWidget(lang_group)
 
         # =======================
         # ส่วนตั้งค่า delay
@@ -211,6 +245,15 @@ class Panel(QtWidgets.QWidget):
 
     def get_delay(self):
         return self.delay_spin.value()
+    
+    # ======================================================
+    # Getter ภาษา ต้น/ปลาย ทาง
+    # ======================================================
+    def get_src_lang(self):
+        return self.combo_src.currentData()
+
+    def get_dst_lang(self):
+        return self.combo_dst.currentData()
 
     # ======================================================
     # Overlay Management
@@ -219,7 +262,7 @@ class Panel(QtWidgets.QWidget):
         """
         สร้าง overlay ใหม่และเชื่อมสัญญาณ log + remove
         """
-        ov = Overlay(self.get_font_size, self.get_delay)
+        ov = Overlay(self.get_font_size, self.get_delay, self.get_src_lang, self.get_dst_lang)
         ov.finished_signal.connect(self.add_log)
         ov.closed_signal.connect(self.remove_overlay)
 

@@ -5,7 +5,11 @@ pip install mss
 pip install numpy
 pip install pillow
 pip install googletrans==4.0.0-rc1
-pip install pytesseract (ต้องติดตั้ง sudo apt install tesseract-ocr)
 
+# สำหรับ Detect ภาษา
+pip install pytesseract (ต้องติดตั้ง sudo apt install tesseract-ocr)
+https://github.com/tesseract-ocr/tessdata_best download ภาษาเพิ่มเติม
+
+# สำหรับ PyQt6
 sudo apt update
 sudo apt install libxcb-cursor0

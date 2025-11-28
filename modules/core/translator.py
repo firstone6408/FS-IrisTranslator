@@ -10,12 +10,14 @@ from googletrans import Translator
 _translator = Translator()
 
 
-def translate_text(raw: str) -> str:
+def translate_text(raw: str, src: str, dest: str) -> str:
     """
-    ฟังก์ชันแปลข้อความเป็นภาษาไทย
-    รับข้อความภาษาอังกฤษ -> ส่งกลับข้อความภาษาไทย
+    ฟังก์ชันแปลข้อความด้วย source/destination language
     """
     try:
-        return _translator.translate(raw, dest="th").text
+        print("raw:", raw)
+        print("src:", src)
+        print("dest:", dest)
+        return _translator.translate(raw, src=src, dest=dest).text
     except Exception:
-        return "(เกิดข้อผิดพลาดขณะแปลข้อความ)"
+        return "(เกิดข้อผิดพลาดขณะทำการแปล)"

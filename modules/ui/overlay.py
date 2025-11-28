@@ -18,11 +18,13 @@ class Overlay(QtWidgets.QWidget):
     finished_signal = QtCore.pyqtSignal(object)
     closed_signal = QtCore.pyqtSignal(object)
 
-    def __init__(self, font_size_getter, delay_getter):
+    def __init__(self, font_size_getter, delay_getter, src_lang_getter, dst_lang_getter):
         super().__init__()
 
         self.font_size_getter = font_size_getter
         self.delay_getter = delay_getter
+        self.src_lang_getter = src_lang_getter
+        self.dst_lang_getter = dst_lang_getter
 
         # ตั้งหน้าต่างใส + ทะลุเมาส์ได้
         self.setWindowFlags(
@@ -161,7 +163,7 @@ class Overlay(QtWidgets.QWidget):
         self.last_bbox = (px, py, pw, ph)
 
         # ===== เริ่ม OCR ครั้งแรก =====
-        self.start_worker(self.last_bbox)
+        self.start_worker(self.last_bbox, self.src_lang_getter(), self.dst_lang_getter())
 
         delay = self.delay_getter()
         self.timer.setInterval(delay * 1000)
@@ -173,8 +175,8 @@ class Overlay(QtWidgets.QWidget):
     # =====================================================
     # Worker Management (safe)
     # =====================================================
-    def start_worker(self, bbox):
-        worker = OCRWorker(bbox)
+    def start_worker(self, bbox, src_lang, dest_lang):
+        worker = OCRWorker(bbox, src_lang, dest_lang)
 
         worker.finished_signal.connect(self.on_text_ready)
         worker.finished_signal.connect(lambda _: self.cleanup_worker(worker))
@@ -199,7 +201,7 @@ class Overlay(QtWidgets.QWidget):
         if any(w.isRunning() for w in self.workers):
             return
 
-        self.start_worker(self.last_bbox)
+        self.start_worker(self.last_bbox, self.src_lang_getter(), self.dst_lang_getter())
 
     # =====================================================
     # Worker ส่งผลลัพธ์กลับมา

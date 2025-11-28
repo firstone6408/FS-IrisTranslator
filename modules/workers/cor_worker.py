@@ -23,9 +23,11 @@ class OCRWorker(QtCore.QThread):
     last_raw = None
     last_translated = None
 
-    def __init__(self, bbox):
+    def __init__(self, bbox, src_lang, dest_lang):
         super().__init__()
         self.bbox = bbox
+        self.src_lang = src_lang
+        self.dest_lang = dest_lang
         
     def clean_text(self, text):
         """
@@ -51,7 +53,17 @@ class OCRWorker(QtCore.QThread):
             img = Image.frombytes("RGB", cap.size, cap.rgb)
 
         # ===== 2) OCR =====
-        raw = pytesseract.image_to_string(img, lang="eng").strip()
+        # เลือกภาษา OCR ตามภาษาที่ผู้ใช้เลือก
+        # ===== dict สำหรับ Detect ภาษาให้ pytesseract จากที่ User เลือก =====
+        TESS_LANG_MAP = {
+            "en": "eng",
+            "th": "tha",
+            "ja": "jpn"
+        }
+        tess_lang = TESS_LANG_MAP.get(self.src_lang, "eng")
+        # เพิ่ม eng สำรองเพื่อให้ตรวจเจอตัวอักษรภาษาอังกฤษด้วย
+        tess_lang = f"{tess_lang}+eng"
+        raw = pytesseract.image_to_string(img, lang=tess_lang).strip()
         
         # ทำความสะอาด: รวมทุกบรรทัดให้เป็นบรรทัดเดียว
         clean_raw = self.clean_text(raw)
@@ -71,7 +83,7 @@ class OCRWorker(QtCore.QThread):
             th = OCRWorker.last_translated
         else:
             # ===== 4) แปลใหม่ถ้าข้อความเปลี่ยน =====
-            th = translate_text(clean_raw)
+            th = translate_text(clean_raw, self.src_lang, self.dest_lang)
 
             # อัปเดต cache
             OCRWorker.last_raw = clean_raw
