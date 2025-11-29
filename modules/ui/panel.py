@@ -12,6 +12,28 @@ from PyQt6 import QtWidgets, QtGui, QtCore
 from datetime import datetime
 from modules.ui.overlay import Overlay
 
+class LogWindow(QtWidgets.QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Iris Translator - Log Viewer")
+        self.resize(700, 600)
+
+        self.text = QtWidgets.QTextEdit()
+        self.text.setReadOnly(True)
+        self.text.setStyleSheet("""
+            QTextEdit {
+                background-color: #2E3440;
+                color: #ECEFF4;
+                border: 1px solid #4C566A;
+                padding: 8px;
+                font-family: Consolas, monospace;
+            }
+        """)
+
+        self.setCentralWidget(self.text)
+
+    def add_log(self, text: str):
+        self.text.append(text)
 
 class Panel(QtWidgets.QWidget):
     """
@@ -32,12 +54,17 @@ class Panel(QtWidgets.QWidget):
         # ตั้งค่าหน้าต่าง
         # =======================
         self.setWindowTitle("Iris Translator")
-        self.setFixedSize(440, 720)
-
+        self.resize(380, 600)             # <— ย่อ/ขยายได้
+        self.setMinimumSize(380, 600)     # <— ป้องกัน UI แตก
+        
+        # =======================
         # ใช้ธีมสีเข้มแบบ soft (Nord theme)
+        # =======================
         self.apply_dark_theme()
-
+        
+        # =======================
         # Layout หลัก
+        # =======================
         layout = QtWidgets.QVBoxLayout()
         layout.setSpacing(15)
         layout.setContentsMargins(15, 15, 15, 15)
@@ -129,23 +156,26 @@ class Panel(QtWidgets.QWidget):
         # =======================
         btn_group = QtWidgets.QGroupBox("Controls")
         btn_group.setStyleSheet("QGroupBox { font-weight: bold; }")
-        btn_layout = QtWidgets.QVBoxLayout()
-        btn_layout.setSpacing(8)
+        btn_layout = QtWidgets.QGridLayout()
+        btn_layout.setSpacing(10)
 
         self.btn_add = self.create_button("➕ Add Selection (0)", "#4C566A")
         self.btn_clear = self.create_button("🗑️ Clear All Selections", "#BF616A")
-        self.btn_clear_log = self.create_button("✖️ Clear Log", "#D08770")
+        #self.btn_clear_log = self.create_button("✖️ Clear Log", "#D08770")
         self.btn_exit = self.create_button("🚪 Exit Program", "#5E81AC")
+        self.btn_open_log_window = self.create_button("📄 Open Log Window", "#8FBCBB")
 
         self.btn_add.clicked.connect(self.add_overlay)
         self.btn_clear.clicked.connect(self.clear_all)
-        self.btn_clear_log.clicked.connect(self.clear_log)
+        #self.btn_clear_log.clicked.connect(self.clear_log)
         self.btn_exit.clicked.connect(self.exit_program)
+        self.btn_open_log_window.clicked.connect(self.open_log_window)
 
-        btn_layout.addWidget(self.btn_add)
-        btn_layout.addWidget(self.btn_clear)
-        btn_layout.addWidget(self.btn_clear_log)
-        btn_layout.addWidget(self.btn_exit)
+        btn_layout.addWidget(self.btn_add,       0, 0)
+        btn_layout.addWidget(self.btn_clear,     0, 1)
+        #btn_layout.addWidget(self.btn_clear_log, 1, 0)
+        btn_layout.addWidget(self.btn_open_log_window, 1, 0)
+        btn_layout.addWidget(self.btn_exit,      1, 1)
 
         btn_group.setLayout(btn_layout)
         layout.addWidget(btn_group)
@@ -159,6 +189,7 @@ class Panel(QtWidgets.QWidget):
 
         self.log_count = QtWidgets.QLabel("Logs: 0")
         self.log_count.setStyleSheet("color: #88C0D0; font-weight: bold;")
+        self.log_window = LogWindow()
 
         log_header_layout.addWidget(log_label)
         log_header_layout.addStretch(1)
@@ -309,8 +340,8 @@ class Panel(QtWidgets.QWidget):
         self.log_count.setText(f"Logs: {self.log_counter}")
 
         panel_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-        self.log.append(
+        
+        html = (
             f"<b>Log Time:</b> {panel_time}"
             f"<br><b>Event Time:</b> {data['timestamp']}"
             f"<br><b>BBox:</b> {data['bbox']}"
@@ -318,14 +349,23 @@ class Panel(QtWidgets.QWidget):
             f"<br>Translated:<pre>{data['th']}</pre>"
             "<hr>"
         )
+        # ใส่ใน panel log เดิม
+        self.log.append(html)
+        # ใส่ใน log window ด้วย
+        self.log_window.add_log(html)
+        
+    def open_log_window(self):
+        self.log_window.show()
+        self.log_window.raise_()
+        self.log_window.activateWindow()
 
-    def clear_log(self):
-        """
-        ล้าง log ทั้งหมด + รีเซ็ต counter
-        """
-        self.log.clear()
-        self.log_counter = 0
-        self.log_count.setText("Logs: 0")
+    # def clear_log(self):
+    #     """
+    #     ล้าง log ทั้งหมด + รีเซ็ต counter
+    #     """
+    #     self.log.clear()
+    #     self.log_counter = 0
+    #     self.log_count.setText("Logs: 0")
 
     # ======================================================
     # Exit Program
