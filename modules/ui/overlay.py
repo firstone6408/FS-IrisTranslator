@@ -35,7 +35,7 @@ class Overlay(QtWidgets.QWidget):
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
         self.setGeometry(QtWidgets.QApplication.primaryScreen().geometry())
 
-        self.scale = self.devicePixelRatioF()
+        self.scale = self.devicePixelRatioF() - 0.25
 
         # state
         self.start = None

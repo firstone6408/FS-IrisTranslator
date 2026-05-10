@@ -9,15 +9,17 @@ from googletrans import Translator
 # ใช้ instance เดียวตลอดเพื่อลด overhead
 _translator = Translator()
 
+def _translate_logger(raw: str, src: str, dest: str) -> str:
+    print("raw:", raw)
+    print("src:", src)
+    print("dest:", dest)
 
 def translate_text(raw: str, src: str, dest: str) -> str:
     """
     ฟังก์ชันแปลข้อความด้วย source/destination language
     """
     try:
-        print("raw:", raw)
-        print("src:", src)
-        print("dest:", dest)
+        # _translate_logger(raw, src, dest)
         return _translator.translate(raw, src=src, dest=dest).text
     except Exception:
         return "(เกิดข้อผิดพลาดขณะทำการแปล)"

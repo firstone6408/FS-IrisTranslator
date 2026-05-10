@@ -5,8 +5,7 @@
 # ==========================================================
 
 from PyQt6 import QtCore
-import mss
-from PIL import Image
+import pyscreenshot as ImageGrab
 import pytesseract
 from datetime import datetime
 from modules.core.translator import translate_text
@@ -48,9 +47,9 @@ class OCRWorker(QtCore.QThread):
         x, y, w, h = self.bbox
 
         # ===== 1) Capture screen =====
-        with mss.mss() as sct:
-            cap = sct.grab({"top": y, "left": x, "width": w, "height": h})
-            img = Image.frombytes("RGB", cap.size, cap.rgb)
+        img = ImageGrab.grab(
+            bbox=(x, y, x + w, y + h)
+        )
 
         # ===== 2) OCR =====
         # เลือกภาษา OCR ตามภาษาที่ผู้ใช้เลือก
