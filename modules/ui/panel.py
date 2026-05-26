@@ -10,6 +10,7 @@
 
 from PyQt6 import QtWidgets, QtGui, QtCore
 from datetime import datetime
+from html import escape
 from modules.ui.overlay import Overlay
 
 class LogWindow(QtWidgets.QMainWindow):
@@ -343,10 +344,10 @@ class Panel(QtWidgets.QWidget):
         
         html = (
             f"<b>Log Time:</b> {panel_time}"
-            f"<br><b>Event Time:</b> {data['timestamp']}"
-            f"<br><b>BBox:</b> {data['bbox']}"
-            f"<br>Raw:<pre>{data['raw']}</pre>"
-            f"<br>Translated:<pre>{data['th']}</pre>"
+            f"<br><b>Event Time:</b> {escape(str(data['timestamp']))}"
+            f"<br><b>BBox:</b> {escape(str(data['bbox']))}"
+            f"<br>Raw:<pre>{escape(str(data['raw']))}</pre>"
+            f"<br>Translated:<pre>{escape(str(data['th']))}</pre>"
             "<hr>"
         )
         # ใส่ใน panel log เดิม

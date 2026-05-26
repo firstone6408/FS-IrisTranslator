@@ -8,9 +8,11 @@
 
 import argostranslate.package
 import argostranslate.translate
+import threading
 
 from googletrans import Translator as GoogleTranslator
 _google = GoogleTranslator()   # instance เดียว ลด overhead
+_argos_lock = threading.Lock()
 
 
 # ----------------------------------------------------------
@@ -52,9 +54,13 @@ def translate_text(raw: str, src: str, dest: str) -> str:
     1) Argos Translate (ออฟไลน์)
     2) ถ้า Argos ใช้งานไม่ได้ → googletrans (ออนไลน์)
     """
+    if src == dest:
+        return raw
+
     # 1) พยายามใช้ Argos ก่อน
     try:
-        _ensure_model_installed(src, dest)
+        with _argos_lock:
+            _ensure_model_installed(src, dest)
         return argostranslate.translate.translate(raw, src, dest)
 
     except Exception as argos_err:

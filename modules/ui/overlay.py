@@ -33,9 +33,10 @@ class Overlay(QtWidgets.QWidget):
             QtCore.Qt.WindowType.Tool
         )
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.setGeometry(QtWidgets.QApplication.primaryScreen().geometry())
+        self.screen_geometry = QtWidgets.QApplication.primaryScreen().geometry()
+        self.setGeometry(self.screen_geometry)
 
-        self.scale = self.devicePixelRatioF() - 0.25
+        self.scale = self.devicePixelRatioF()
 
         # state
         self.start = None
@@ -100,7 +101,7 @@ class Overlay(QtWidgets.QWidget):
         )
 
         x, y = self.text_pos
-        sw, sh = self.width(), self.height()
+        sh = self.height()
         bubble_w = wrapped.width() + 20
         bubble_h = wrapped.height() + 10
 
@@ -150,11 +151,11 @@ class Overlay(QtWidgets.QWidget):
             self.rect.height(),
         )
 
-        # scale → real pixel
-        px = int(lx * self.scale)
-        py = int(ly * self.scale)
-        pw = int(lw * self.scale)
-        ph = int(lh * self.scale)
+        # local Qt coordinates -> global screen pixels
+        px = int((self.screen_geometry.x() + lx) * self.scale)
+        py = int((self.screen_geometry.y() + ly) * self.scale)
+        pw = max(1, int(lw * self.scale))
+        ph = max(1, int(lh * self.scale))
 
         self.text_pos = (lx, ly - 10)
         self.persistent_rect = QtCore.QRect(lx, ly, lw, lh)
@@ -231,7 +232,7 @@ class Overlay(QtWidgets.QWidget):
         for w in list(self.workers):
             try:
                 w.finished_signal.disconnect()
-            except:
+            except TypeError:
                 pass
 
             w.quit()
